@@ -2,8 +2,7 @@ defmodule GuardianRedis.Redix do
   @moduledoc """
     Redix module
   """
-  @default_redis_host "127.0.0.1"
-  @default_redis_port 6379
+  @default_redis_url "redis://127.0.0.1:6379"
   @default_redis_pool_size 1
 
   @doc """
@@ -13,7 +12,7 @@ defmodule GuardianRedis.Redix do
     children =
       for index <- 0..(pool_size() - 1) do
         Supervisor.child_spec(
-          {Redix, name: :"redix_#{index}", host: redis_host(), port: redis_port()},
+          {Redix, {redis_url(), name: :"redix_#{index}"}},
           id: {Redix, index}
         )
       end
@@ -43,13 +42,8 @@ defmodule GuardianRedis.Redix do
     Redix.command(:"redix_#{random_index()}", command_params)
   end
 
-  defp redis_host do
-    redis_config()[:host] || @default_redis_host
-  end
-
-  defp redis_port do
-    # casting integer port value to String in case port value comes from ENV
-    ("#{redis_config()[:port]}" || "#{@default_redis_port}") |> String.to_integer()
+  defp redis_url do
+    redis_config()[:url] || @default_redis_url
   end
 
   defp pool_size do
